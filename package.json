@@ -1,0 +1,33 @@
+{
+  "name": "telegram-channel-reader",
+  "version": "1.0.0",
+  "description": "Next.js app that reads messages from Telegram channel",
+  "scripts": {
+    "dev": "node server.js",
+    "build": "next build",
+    "start": "node server.js",
+    "start:prod": "NODE_ENV=production node server.js",
+    "lint": "next lint",
+    "pm2:start": "pm2 start ecosystem.config.js",
+    "pm2:stop": "pm2 stop telegram-reader",
+    "pm2:restart": "pm2 restart telegram-reader",
+    "pm2:logs": "pm2 logs telegram-reader"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.11.1",
+    "@emotion/styled": "^11.11.0",
+    "@mui/icons-material": "^5.14.19",
+    "@mui/material": "^5.14.20",
+    "dotenv": "^17.2.3",
+    "express": "^4.18.2",
+    "input": "^1.0.1",
+    "next": "^14.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "telegram": "^2.19.4"
+  },
+  "devDependencies": {
+    "eslint": "^8.54.0",
+    "eslint-config-next": "^14.0.0"
+  }
+}
