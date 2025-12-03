@@ -64,7 +64,7 @@ export default function Home() {
     // Auto-refresh every 30 seconds
     const interval = setInterval(() => {
       fetchMessages(true);
-    }, 30000);
+    }, 5000);
 
     return () => clearInterval(interval);
   }, []);
