@@ -194,8 +194,8 @@ export default function Home() {
                 <Grid container spacing={2}>
                    <Grid item xs={6}>
                       <Card variant='outlined' sx={{textAlign:'center', backgroundImage:'linear-gradient(to bottom left, #c0f6e9, #1dab95 )', borderRadius:'15px'}}>
-                        <Typography variant='body1' sx={{my:2, color:'white'}}> تومان
-                          {goldData.melt.formattedBuy || 'N/A'}
+                        <Typography variant='body1' sx={{my:2, color:'white'}}> 
+                          {goldData.melt.formattedBuy || 'N/A'} تومان
                         </Typography>
                       </Card>
                       <Card variant='outlined' sx={{textAlign:'center', backgroundColor:'#F7E396' , borderRadius:'15px' , mt:1}}>
