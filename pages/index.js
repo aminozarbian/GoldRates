@@ -194,7 +194,7 @@ export default function Home() {
                 <Grid container spacing={2}>
                    <Grid item xs={6}>
                       <Card variant='outlined' sx={{textAlign:'center', backgroundImage:'linear-gradient(to bottom left, #c0f6e9, #1dab95 )', borderRadius:'15px'}}>
-                        <Typography variant='body1' sx={{my:2, color:'white'}}>
+                        <Typography variant='body1' sx={{my:2, color:'white'}}> تومان
                           {goldData.melt.formattedBuy || 'N/A'}
                         </Typography>
                       </Card>
@@ -207,7 +207,7 @@ export default function Home() {
                    <Grid item xs={6}>
                       <Card variant='outlined' sx={{textAlign:'center', backgroundImage:'linear-gradient(to bottom left, #f49c9c, #d32626 )' , borderRadius:'15px'}}>
                         <Typography variant='body1' sx={{my:2, color:'white'}}>
-                          {goldData.melt.formattedSell || 'N/A'}
+                          {goldData.melt.formattedSell || 'N/A'} تومان
                         </Typography>
                       </Card>
                       <Card variant='outlined' sx={{textAlign:'center', backgroundColor:'#F7E396' , borderRadius:'15px' , mt:1}}>
@@ -231,7 +231,7 @@ export default function Home() {
                    <Grid item xs={6}>
                       <Card variant='outlined' sx={{textAlign:'center', backgroundImage:'linear-gradient(to bottom left, #c0f6e9, #1dab95 )', borderRadius:'15px'}}>
                         <Typography variant='body1' sx={{my:2, color:'white'}}>
-                          {goldData.gram.formattedBuy || 'N/A'}
+                          {goldData.gram.formattedBuy || 'N/A'} تومان
                         </Typography>
                       </Card>
                       <Card variant='outlined' sx={{textAlign:'center', backgroundColor:'#F7E396' , borderRadius:'15px' , mt:1}}>
@@ -243,7 +243,7 @@ export default function Home() {
                    <Grid item xs={6}>
                       <Card variant='outlined' sx={{textAlign:'center', backgroundImage:'linear-gradient(to bottom left, #f49c9c, #d32626 )' , borderRadius:'15px'}}>
                         <Typography variant='body1' sx={{my:2, color:'white'}}>
-                          {goldData.gram.formattedSell || 'N/A'}
+                          {goldData.gram.formattedSell || 'N/A'} تومان
                         </Typography>
                       </Card>
                       <Card variant='outlined' sx={{textAlign:'center', backgroundColor:'#F7E396' , borderRadius:'15px' , mt:1}}>
@@ -254,47 +254,6 @@ export default function Home() {
                    </Grid>
                 </Grid>
               </Grid>
-              )}
-
-
-              {sellMessage && (
-                <Grid item xs={12} key={sellMessage.id}>
-                  <Card variant="outlined">
-                    <CardContent>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                        <Typography variant="caption" color="text.secondary">
-                          {new Date(sellMessage.date).toLocaleString()}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          ID: {sellMessage.id} (فروش)
-                        </Typography>
-                      </Box>
-                      <Typography variant="body1" component="div" sx={{ whiteSpace: 'pre-wrap' }}>
-                        {sellMessage.text || '(No text content)'}
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              )}
-
-              {buyMessage && (
-                <Grid item xs={12} key={buyMessage.id}>
-                  <Card variant="outlined">
-                    <CardContent>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                        <Typography variant="caption" color="text.secondary">
-                          {new Date(buyMessage.date).toLocaleString()}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          ID: {buyMessage.id} (خرید)
-                        </Typography>
-                      </Box>
-                      <Typography variant="body1" component="div" sx={{ whiteSpace: 'pre-wrap' }}>
-                        {buyMessage.text || '(No text content)'}
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                </Grid>
               )}
             </Grid>
           </>   
