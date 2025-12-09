@@ -29,20 +29,11 @@ let goldData = {
 };
 let client = null;
 let isConnected = false;
-let isConnecting = false; // Prevent multiple simultaneous connection attempts
 
 // Initialize Telegram client
-async function initializeTelegramClient(retryCount = 0) {
-  // Prevent multiple simultaneous connection attempts
-  if (isConnecting) {
-    console.log('Connection attempt already in progress, waiting...');
-    return null;
-  }
-  
-  isConnecting = true;
+async function initializeTelegramClient() {
   if (!API_ID || !API_HASH) {
     console.log('Telegram API ID or API Hash not configured');
-    isConnecting = false;
     return null;
   }
 
@@ -61,12 +52,6 @@ async function initializeTelegramClient(retryCount = 0) {
       
       if (!PHONE_NUMBER) {
         console.error('Phone number is required for first-time authentication');
-        isConnecting = false;
-        try {
-          await tgClient.disconnect();
-        } catch (e) {
-          // Ignore disconnect errors
-        }
         return null;
       }
 
@@ -79,12 +64,6 @@ async function initializeTelegramClient(retryCount = 0) {
         console.error('  2. Complete authentication');
         console.error('  3. Copy the session string from console output');
         console.error('  4. Add it to your production .env file');
-        isConnecting = false;
-        try {
-          await tgClient.disconnect();
-        } catch (e) {
-          // Ignore disconnect errors
-        }
         return null;
       }
 
@@ -114,57 +93,13 @@ async function initializeTelegramClient(retryCount = 0) {
 
     console.log('Successfully connected to Telegram!');
     isConnected = true;
-    isConnecting = false;
     return tgClient;
   } catch (error) {
-    isConnecting = false;
     console.error('Error initializing Telegram client:', error.message);
-    
-    // Handle AUTH_KEY_DUPLICATED error specifically
-    if (error.message.includes('AUTH_KEY_DUPLICATED') || error.message.includes('406')) {
-      console.error('\n=== AUTH_KEY_DUPLICATED ERROR ===');
-      console.error('This error occurs when the same Telegram session is being used in multiple places simultaneously.');
-      console.error('\nSOLUTIONS:');
-      console.error('1. Make sure your local development server is STOPPED when running on VPS');
-      console.error('2. Check if there are multiple PM2 instances running: pm2 list');
-      console.error('3. Stop all instances and restart: pm2 stop all && pm2 restart ecosystem.config.js');
-      console.error('4. If the problem persists, generate a NEW session string:');
-      console.error('   - Stop the VPS instance');
-      console.error('   - Run locally: npm run dev');
-      console.error('   - Complete authentication and copy the NEW session string');
-      console.error('   - Update TELEGRAM_SESSION_STRING in your VPS .env or ecosystem.config.js');
-      console.error('===================================\n');
-      
-      // Disconnect the client if it was partially connected
-      try {
-        await tgClient.disconnect();
-      } catch (e) {
-        // Ignore disconnect errors
-      }
-      
-      // Retry after a delay (exponential backoff, max 3 retries)
-      if (retryCount < 3) {
-        const delay = Math.min(1000 * Math.pow(2, retryCount), 10000); // Max 10 seconds
-        console.log(`Retrying connection in ${delay / 1000} seconds... (attempt ${retryCount + 1}/3)`);
-        await new Promise(resolve => setTimeout(resolve, delay));
-        return initializeTelegramClient(retryCount + 1);
-      } else {
-        console.error('Max retries reached. Please resolve the AUTH_KEY_DUPLICATED issue manually.');
-      }
-      
-      return null;
-    }
     
     // If we have a session string but it's invalid, try to re-authenticate
     if (SESSION_STRING && error.message.includes('AUTH')) {
       console.log('Session expired. Please update TELEGRAM_SESSION_STRING or re-authenticate.');
-    }
-    
-    // Disconnect the client if it was partially connected
-    try {
-      await tgClient.disconnect();
-    } catch (e) {
-      // Ignore disconnect errors
     }
     
     return null;
