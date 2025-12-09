@@ -17,9 +17,16 @@ const API_HASH = process.env.TELEGRAM_API_HASH || '';
 const PHONE_NUMBER = process.env.TELEGRAM_PHONE_NUMBER || '';
 const SESSION_STRING = process.env.TELEGRAM_SESSION_STRING || '';
 const CHANNEL_USERNAME = process.env.TELEGRAM_CHANNEL_USERNAME || '';
+const GOLD_CHANNEL_USERNAME = process.env.TELEGRAM_GOLD_CHANNEL_USERNAME || '';
 
 // Store messages in memory (in production, use a database)
-let messages = [];
+let sellMessage = null;
+let buyMessage = null;
+let goldData = {
+  melt: { sell: null, buy: null },
+  gram: { sell: null, buy: null },
+  updatedAt: null
+};
 let client = null;
 let isConnected = false;
 
@@ -99,6 +106,13 @@ async function initializeTelegramClient() {
   }
 }
 
+// Helper to convert Persian/Arabic digits to English
+function toEnglishDigits(str) {
+  if (!str) return str;
+  return str.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d))
+            .replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+}
+
 // Function to fetch messages from Telegram channel
 async function fetchTelegramMessages() {
   if (!client || !isConnected || !CHANNEL_USERNAME) {
@@ -114,30 +128,236 @@ async function fetchTelegramMessages() {
     
     // Get messages from the channel
     const result = await client.getMessages(entity, {
-      limit: 100,
+      limit: 30,
     });
 
-    // Process messages
-    const channelMessages = [];
-    for (const message of result) {
-      if (message.message) {
-        channelMessages.push({
-          id: message.id,
-          text: message.message,
-          date: message.date ? new Date(message.date * 1000).toISOString() : new Date().toISOString(),
-          chatId: entity.id ? entity.id.toString() : '',
-          chatTitle: entity.title || CHANNEL_USERNAME,
-          views: message.views || 0,
-          dateObj: message.date || Math.floor(Date.now() / 1000)
+    // Get all messages with 'دلار فردایی تهران'
+    const allDollarMessages = result.filter(
+      msg => msg.message && 
+             msg.message.includes('دلار فردایی تهران')
+    );
+
+    // Filter messages for both buy and sell
+    // Buy messages can have "خرید" or "خــرید" (with dashes/separators)
+    // Use regex to match variations with special characters between letters
+    const buyMessages = allDollarMessages.filter(
+      msg => {
+        // Match "خرید" with optional special characters/dashes between letters
+        // Pattern: خ followed by optional special chars, ر followed by optional special chars, ی followed by optional special chars, د
+        return /خ[ـ\s\-_]*ر[ـ\s\-_]*ی[ـ\s\-_]*د/.test(msg.message) || 
+               msg.message.includes('خرید') ||
+               msg.message.includes('خريد'); // Different character encoding
+      }
+    );
+
+    const sellMessages = allDollarMessages.filter(
+      msg => msg.message.includes('فروش')
+    );
+
+    // Debug: Log message counts
+    //console.log(`Found ${sellMessages.length} sell messages and ${buyMessages.length} buy messages`);
+    
+    // Debug: If no buy messages found, check what messages we have
+    if (buyMessages.length === 0) {
+      console.log(`Total messages with 'دلار فردایی تهران': ${allDollarMessages.length}`);
+      if (allDollarMessages.length > 0) {
+        console.log('Sample message text:', allDollarMessages[0].message?.substring(0, 200));
+        // Log first 5 messages to see patterns
+        console.log('\n--- First 5 messages with دلار فردایی تهران ---');
+        allDollarMessages.slice(0, 5).forEach((msg, idx) => {
+          console.log(`Message ${idx + 1}:`, msg.message?.substring(0, 300));
         });
+        console.log('--- End of messages ---\n');
       }
     }
 
-    // Sort by date (newest first) and update messages array
-    channelMessages.sort((a, b) => b.dateObj - a.dateObj);
-    messages = channelMessages;
+    // Helper function to process messages and find the latest one
+    function processMessages(messages) {
+      let latestMessage = null;
+      let latestDate = 0;
+      
+      for (const msg of messages) {
+        if (msg.message) {
+          const dateObj = msg.date
+            ? new Date(msg.date * 1000)
+            : new Date();
+          const dateTime = dateObj.getTime();
+
+          if (dateTime > latestDate) {
+            latestDate = dateTime;
+            latestMessage = {
+              id: msg.id,
+              text: msg.message,
+              date: dateObj.toISOString(),
+              dateObj: dateTime,
+              chatId: entity.id ? entity.id.toString() : '',
+            };
+          }
+        }
+      }
+
+      // Extract number from message
+      if (latestMessage) {
+        // Try to find number before "خرید" or "فروش" first (format: "119,750 خــرید🔵")
+        let numberMatch = null;
+        
+        // Check for number before buy keyword
+        numberMatch = latestMessage.text.match(/(\d{1,3}(?:,\d{3})+)\s*[⏳\s]*خ[ـ\s\-_]*ر[ـ\s\-_]*ی[ـ\s\-_]*د/);
+        if (!numberMatch) {
+          numberMatch = latestMessage.text.match(/(\d{1,3}(?:,\d{3})+)\s*[⏳\s]*خرید/);
+        }
+        
+        // Check for number before sell keyword
+        if (!numberMatch) {
+          numberMatch = latestMessage.text.match(/(\d{1,3}(?:,\d{3})+)\s*[⏳\s]*فروش/);
+        }
+        
+        // Fallback: try to find any number with commas
+        if (!numberMatch) {
+          numberMatch = latestMessage.text.match(/(\d{1,3}(?:,\d{3})+)/); // Must have at least one comma
+        }
+        if (!numberMatch) {
+          numberMatch = latestMessage.text.match(/(\d{1,3}(?:,\d{3})*)/); // Can have zero or more commas
+        }
+        if (!numberMatch) {
+          numberMatch = latestMessage.text.match(/([\d,]+)/); // Any digits and commas
+        }
+        
+        if (numberMatch && numberMatch[1]) {
+          latestMessage.number = numberMatch[1].replace(/,/g, ''); // Remove commas for numeric value
+          latestMessage.formattedNumber = numberMatch[1]; // Keep formatted version with commas
+        } else {
+          console.log('No number found in text:', latestMessage.text);
+        }
+      }
+      
+      return latestMessage;
+    }
+
+    // Helper function to extract price from a message for buy or sell
+    function extractPriceFromMessage(msg, isBuy) {
+      const dateObj = msg.date ? new Date(msg.date * 1000) : new Date();
+      const dateTime = dateObj.getTime();
+      
+      if (isBuy) {
+        // Try multiple patterns to find the number after "خرید" (with or without dashes)
+        let buyMatch = msg.message.match(/خ[ـ\s\-_]*ر[ـ\s\-_]*ی[ـ\s\-_]*د[^\d]*(\d{1,3}(?:,\d{3})+)/);
+        if (!buyMatch) {
+          buyMatch = msg.message.match(/خرید[^\d]*(\d{1,3}(?:,\d{3})+)/);
+        }
+        if (!buyMatch) {
+          buyMatch = msg.message.match(/خ[ـ\s\-_]*ر[ـ\s\-_]*ی[ـ\s\-_]*د[^\d]*(\d{1,3}(?:,\d{3})*)/);
+        }
+        if (!buyMatch) {
+          buyMatch = msg.message.match(/خرید[^\d]*(\d{1,3}(?:,\d{3})*)/);
+        }
+        if (!buyMatch) {
+          buyMatch = msg.message.match(/خ[ـ\s\-_]*ر[ـ\s\-_]*ی[ـ\s\-_]*د[^\d]*([\d,]+)/);
+        }
+        if (!buyMatch) {
+          buyMatch = msg.message.match(/خرید[^\d]*([\d,]+)/);
+        }
+        // Also try number before buy keyword (with any characters/emojis in between)
+        if (!buyMatch) {
+          buyMatch = msg.message.match(/(\d{1,3}(?:,\d{3})+)[^\d]*خ[ـ\s\-_]*ر[ـ\s\-_]*ی[ـ\s\-_]*د/);
+        }
+        if (!buyMatch) {
+          buyMatch = msg.message.match(/(\d{1,3}(?:,\d{3})+)[^\d]*خرید/);
+        }
+        
+        if (buyMatch && buyMatch[1]) {
+          return {
+            id: msg.id,
+            text: msg.message,
+            date: dateObj.toISOString(),
+            dateObj: dateTime,
+            chatId: entity.id ? entity.id.toString() : '',
+            number: buyMatch[1].replace(/,/g, ''),
+            formattedNumber: buyMatch[1],
+          };
+        }
+      } else {
+        // Try to extract sell price
+        let sellMatch = msg.message.match(/فروش[^\d]*(\d{1,3}(?:,\d{3})+)/);
+        if (!sellMatch) {
+          sellMatch = msg.message.match(/فروش[^\d]*(\d{1,3}(?:,\d{3})*)/);
+        }
+        if (!sellMatch) {
+          sellMatch = msg.message.match(/فروش[^\d]*([\d,]+)/);
+        }
+        // Also try number before sell keyword (with any characters/emojis in between)
+        if (!sellMatch) {
+          sellMatch = msg.message.match(/(\d{1,3}(?:,\d{3})+)[^\d]*فروش/);
+        }
+        
+        if (sellMatch && sellMatch[1]) {
+          return {
+            id: msg.id,
+            text: msg.message,
+            date: dateObj.toISOString(),
+            dateObj: dateTime,
+            chatId: entity.id ? entity.id.toString() : '',
+            number: sellMatch[1].replace(/,/g, ''),
+            formattedNumber: sellMatch[1],
+          };
+        }
+      }
+      return null;
+    }
+
+    // Collect all potential buy and sell messages (from both combined and separate)
+    let allBuyCandidates = [];
+    let allSellCandidates = [];
     
-    console.log(`Fetched ${messages.length} message(s) from Telegram channel: ${CHANNEL_USERNAME}`);
+    // Process all messages to find buy and sell prices
+    for (const msg of allDollarMessages) {
+      const hasBuy = /خ[ـ\s\-_]*ر[ـ\s\-_]*ی[ـ\s\-_]*د/.test(msg.message) || 
+                     msg.message.includes('خرید') ||
+                     msg.message.includes('خريد');
+      const hasSell = msg.message.includes('فروش');
+      
+      if (hasBuy) {
+        const buyPrice = extractPriceFromMessage(msg, true);
+        if (buyPrice) {
+          allBuyCandidates.push(buyPrice);
+        }
+      }
+      
+      if (hasSell) {
+        const sellPrice = extractPriceFromMessage(msg, false);
+        if (sellPrice) {
+          allSellCandidates.push(sellPrice);
+        }
+      }
+    }
+    
+    // Find the latest buy message
+    if (allBuyCandidates.length > 0) {
+      const latestBuy = allBuyCandidates.reduce((latest, current) => {
+        return (current.dateObj > latest.dateObj) ? current : latest;
+      });
+      
+      if (!buyMessage || latestBuy.dateObj > buyMessage.dateObj) {
+        buyMessage = latestBuy;
+      }
+    } else {
+      console.log('No buy messages found');
+    }
+    
+    // Find the latest sell message
+    if (allSellCandidates.length > 0) {
+      const latestSell = allSellCandidates.reduce((latest, current) => {
+        return (current.dateObj > latest.dateObj) ? current : latest;
+      });
+      
+      if (!sellMessage || latestSell.dateObj > sellMessage.dateObj) {
+        sellMessage = latestSell;
+      }
+    } else {
+      console.log('No sell messages found');
+    }
+    
+    // console.log(`Fetched ${messages.length} message(s) from Telegram channel: ${CHANNEL_USERNAME}`);
   } catch (error) {
     console.error('Error fetching Telegram messages:', error.message);
     
@@ -150,16 +370,109 @@ async function fetchTelegramMessages() {
   }
 }
 
+// Function to fetch Gold messages
+async function fetchGoldMessages() {
+  if (!client || !isConnected || !GOLD_CHANNEL_USERNAME) {
+    return;
+  }
+
+  try {
+    const entity = await client.getEntity(GOLD_CHANNEL_USERNAME);
+    const result = await client.getMessages(entity, { limit: 10 });
+
+    const relevantMessages = result.filter(msg => 
+      msg.message && msg.message.includes('آبشده نقدی فردا')
+    );
+
+    if (relevantMessages.length > 0) {
+      // Find latest message
+      let latestMsg = relevantMessages.reduce((latest, current) => {
+        return (current.date > latest.date) ? current : latest;
+      });
+
+      if (latestMsg) {
+          const text = toEnglishDigits(latestMsg.message);
+          const dateObj = new Date(latestMsg.date * 1000);
+          
+          // Split by "هرگرم" or "هر گرم" to separate Melt and Gram sections
+          // Normalize text slightly for splitting
+          const normalizedText = text.replace(/هر\s*گرم/g, 'SPLIT_HERE_GRAM');
+          const parts = normalizedText.split('SPLIT_HERE_GRAM');
+          
+          const meltPart = parts[0]; // "Melt" section is usually first
+          const gramPart = parts[1] || ''; // "Gram" section is usually second
+
+          let meltSell = null;
+          let meltBuy = null;
+          let gramSell = null;
+          let gramBuy = null;
+
+          // Helper to extract buy/sell
+          const extractBuySell = (textPart) => {
+              const sellMatch = textPart.match(/فروش\s*:\s*([\d,]+)/);
+              const buyMatch = textPart.match(/خرید\s*:\s*([\d,]+)/);
+              return {
+                  sell: sellMatch ? sellMatch[1] : null,
+                  buy: buyMatch ? buyMatch[1] : null
+              };
+          };
+
+          if (meltPart) {
+             const result = extractBuySell(meltPart);
+             meltSell = result.sell;
+             meltBuy = result.buy;
+          }
+
+          if (gramPart) {
+             const result = extractBuySell(gramPart);
+             gramSell = result.sell;
+             gramBuy = result.buy;
+          }
+          
+          if (meltSell || meltBuy || gramSell || gramBuy) {
+              goldData = {
+                  melt: { 
+                      sell: meltSell ? meltSell.replace(/,/g, '') : null, 
+                      buy: meltBuy ? meltBuy.replace(/,/g, '') : null,
+                      formattedSell: meltSell,
+                      formattedBuy: meltBuy
+                  },
+                  gram: { 
+                      sell: gramSell ? gramSell.replace(/,/g, '') : null, 
+                      buy: gramBuy ? gramBuy.replace(/,/g, '') : null,
+                      formattedSell: gramSell,
+                      formattedBuy: gramBuy
+                  },
+                  updatedAt: dateObj.toISOString(),
+                  messageId: latestMsg.id
+              };
+              // Only log if something changed? For now log always on update to verify.
+              // console.log(`Updated Gold data: Melt(S:${goldData.melt.formattedSell}, B:${goldData.melt.formattedBuy})`);
+          }
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching Gold messages:', error.message);
+  }
+}
+
 // Initialize and start fetching messages
 (async () => {
   client = await initializeTelegramClient();
   
-  if (client && CHANNEL_USERNAME) {
-    // Fetch messages on startup
-    await fetchTelegramMessages();
+  if (client) {
+    if (CHANNEL_USERNAME) {
+        await fetchTelegramMessages();
+    }
+    if (GOLD_CHANNEL_USERNAME) {
+        await fetchGoldMessages();
+    }
     
-    // Fetch messages every 30 seconds
-    setInterval(fetchTelegramMessages, 30000);
+    // Fetch messages every 5 seconds
+    setInterval(async () => {
+        if (CHANNEL_USERNAME) await fetchTelegramMessages();
+        if (GOLD_CHANNEL_USERNAME) await fetchGoldMessages();
+    }, 5000);
   }
 })();
 
@@ -169,7 +482,13 @@ app.prepare().then(() => {
 
   // API endpoint to get messages
   server.get('/api/messages', (req, res) => {
-    res.json({ messages, success: true, connected: isConnected });
+    res.json({ 
+      sellMessage, 
+      buyMessage, 
+      goldData,
+      success: true, 
+      connected: isConnected 
+    });
   });
 
   // API endpoint to manually trigger message fetch
@@ -177,8 +496,17 @@ app.prepare().then(() => {
     if (!isConnected) {
       client = await initializeTelegramClient();
     }
-    await fetchTelegramMessages();
-    res.json({ messages, success: true, message: 'Messages fetched successfully', connected: isConnected });
+    if (CHANNEL_USERNAME) await fetchTelegramMessages();
+    if (GOLD_CHANNEL_USERNAME) await fetchGoldMessages();
+    
+    res.json({ 
+      sellMessage, 
+      buyMessage, 
+      goldData,
+      success: true, 
+      messageInfo: 'Messages fetched successfully', 
+      connected: isConnected 
+    });
   });
 
   // Handle all other requests with Next.js

@@ -1,0 +1,42 @@
+@font-face {
+    font-family: 'Roboto';
+    src: url("fonts/Roboto-Regular.eot");
+    src: url('fonts/Roboto-Regular.eot?#iefix') format('embedded-opentype'),
+        url('fonts/Roboto-Regular.woff2') format('woff2'),
+        url('fonts/Roboto-Regular.woff') format('woff'),
+        url('fonts/Roboto-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Iransans';
+    src: url("fonts/IRANSansWeb_FaNum.eot");
+    src: url('fonts/IRANSansWeb_FaNum.eot?#iefix') format('embedded-opentype'),
+        url('fonts/IRANSansWeb_FaNum.woff2') format('woff2'),
+        url('fonts/IRANSansWeb_FaNum.woff') format('woff'),
+        url('fonts/IRANSansWeb_FaNum.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+  direction: rtl;
+  text-align: right;
+  font-feature-settings: "tnum" 0, "lnum" 0;
+  unicode-bidi: plaintext;
+  font-variant-numeric: normal;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+

@@ -12,13 +12,18 @@ import {
   Toolbar,
   IconButton,
   Grid,
-  Paper
+  Paper,
+  CardMedia,
+  Divider
 } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
-import TelegramIcon from '@mui/icons-material/Telegram';
+import GoldBar  from './pics/goldbar.png';
+import Image from 'next/image'
 
 export default function Home() {
-  const [messages, setMessages] = useState([]);
+  const [sellMessage, setSellMessage] = useState(null);
+  const [buyMessage, setBuyMessage] = useState(null);
+  const [goldData, setGoldData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -37,7 +42,9 @@ export default function Home() {
       const data = await response.json();
       
       if (data.success) {
-        setMessages(data.messages || []);
+        setSellMessage(data.sellMessage || null);
+        setBuyMessage(data.buyMessage || null);
+        setGoldData(data.goldData || null);
         setConnected(data.connected || false);
       } else {
         setError('Failed to fetch messages');
@@ -71,11 +78,11 @@ export default function Home() {
 
   return (
     <>
-      <AppBar position="static">
+      <AppBar position="static" sx={{ backgroundColor: '#696D7D' }}>
         <Toolbar>
-          <TelegramIcon sx={{ mr: 2 }} />
+          <Image src={GoldBar} alt="Gold Icon" width={40} height={40} style={{ marginRight: '16px' }} />
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            Telegram Channel Reader
+            Gold Rates
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
             <Box
@@ -102,7 +109,7 @@ export default function Home() {
       </AppBar>
 
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-        {!connected && !loading && (
+         {!connected && !loading && (
           <Alert severity="warning" sx={{ mb: 3 }}>
             Not connected to Telegram. Please check your configuration and ensure authentication is complete.
           </Alert>
@@ -117,7 +124,7 @@ export default function Home() {
           <Box display="flex" justifyContent="center" alignItems="center" minHeight="50vh">
             <CircularProgress />
           </Box>
-        ) : messages.length === 0 ? (
+        ) : !sellMessage && !buyMessage ? (
           <Paper sx={{ p: 4, textAlign: 'center' }}>
             <Typography variant="h6" color="text.secondary">
               No messages found
@@ -134,42 +141,163 @@ export default function Home() {
               {refreshing ? <CircularProgress size={24} /> : 'Refresh Messages'}
             </Button>
           </Paper>
-        ) : (
+        ) : ( 
           <>
-            <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Box sx={{ mb: 3, textAlign:'center' }}>
               <Typography variant="h4" component="h1">
-                Channel Messages
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {messages.length} message{messages.length !== 1 ? 's' : ''}
+                انس جهانی:
               </Typography>
             </Box>
+            <Divider></Divider>
 
-            <Grid container spacing={3}>
-              {messages.map((message) => (
-                <Grid item xs={12} key={message.id}>
+            <Grid container spacing={3} sx={{mt:1}}>
+              {/* Dollar Section */}
+              <Grid item xs={12}>
+                <Typography variant='h5' align="center" sx={{ mb: 2 }}>
+                  دلار
+                </Typography>
+                <Grid container spacing={2}>
+                   <Grid item xs={6}>
+                      <Card variant='outlined' sx={{textAlign:'center', backgroundImage:'linear-gradient(to bottom left, #c0f6e9, #1dab95 )', borderRadius:'15px'}}>
+                        <Typography variant='body1' sx={{my:2, color:'white'}}>
+                          {buyMessage ? (buyMessage.formattedNumber || buyMessage.number || 'N/A') : 'N/A'} تومان
+                        </Typography>
+                      </Card>
+                      <Card variant='outlined' sx={{textAlign:'center', backgroundColor:'#F7E396' , borderRadius:'15px' , mt:1}}>
+                        <Typography variant='body1' sx={{my:1}}>
+                          خرید
+                        </Typography>
+                      </Card>
+                   </Grid>
+                   <Grid item xs={6}>
+                      <Card variant='outlined' sx={{textAlign:'center', backgroundImage:'linear-gradient(to bottom left, #f49c9c, #d32626 )' , borderRadius:'15px'}}>
+                        <Typography variant='body1' sx={{my:2, color:'white'}}>
+                          {sellMessage ? (sellMessage.formattedNumber || sellMessage.number || 'N/A') : 'N/A'} تومان
+                        </Typography>
+                      </Card>
+                      <Card variant='outlined' sx={{textAlign:'center', backgroundColor:'#F7E396' , borderRadius:'15px' , mt:1}}>
+                        <Typography variant='body1' sx={{my:1}}>
+                          فروش
+                        </Typography>
+                      </Card>
+                   </Grid>
+                </Grid>
+              </Grid>
+
+              {/* Gold Melt (Abshodeh) Section */}
+              {goldData && goldData.melt && (
+              <Grid item xs={12}>
+                <Divider sx={{ my: 2 }} />
+                <Typography variant='h5' align="center" sx={{ mb: 2 }}>
+                  آبشده نقدی
+                </Typography>
+                <Grid container spacing={2}>
+                   <Grid item xs={6}>
+                      <Card variant='outlined' sx={{textAlign:'center', backgroundImage:'linear-gradient(to bottom left, #c0f6e9, #1dab95 )', borderRadius:'15px'}}>
+                        <Typography variant='body1' sx={{my:2, color:'white'}}>
+                          {goldData.melt.formattedBuy || 'N/A'}
+                        </Typography>
+                      </Card>
+                      <Card variant='outlined' sx={{textAlign:'center', backgroundColor:'#F7E396' , borderRadius:'15px' , mt:1}}>
+                        <Typography variant='body1' sx={{my:1}}>
+                          خرید
+                        </Typography>
+                      </Card>
+                   </Grid>
+                   <Grid item xs={6}>
+                      <Card variant='outlined' sx={{textAlign:'center', backgroundImage:'linear-gradient(to bottom left, #f49c9c, #d32626 )' , borderRadius:'15px'}}>
+                        <Typography variant='body1' sx={{my:2, color:'white'}}>
+                          {goldData.melt.formattedSell || 'N/A'}
+                        </Typography>
+                      </Card>
+                      <Card variant='outlined' sx={{textAlign:'center', backgroundColor:'#F7E396' , borderRadius:'15px' , mt:1}}>
+                        <Typography variant='body1' sx={{my:1}}>
+                          فروش
+                        </Typography>
+                      </Card>
+                   </Grid>
+                </Grid>
+              </Grid>
+              )}
+
+              {/* Gold Gram Section */}
+              {goldData && goldData.gram && (
+              <Grid item xs={12}>
+                <Divider sx={{ my: 2 }} />
+                <Typography variant='h5' align="center" sx={{ mb: 2 }}>
+                  هر گرم
+                </Typography>
+                <Grid container spacing={2}>
+                   <Grid item xs={6}>
+                      <Card variant='outlined' sx={{textAlign:'center', backgroundImage:'linear-gradient(to bottom left, #c0f6e9, #1dab95 )', borderRadius:'15px'}}>
+                        <Typography variant='body1' sx={{my:2, color:'white'}}>
+                          {goldData.gram.formattedBuy || 'N/A'}
+                        </Typography>
+                      </Card>
+                      <Card variant='outlined' sx={{textAlign:'center', backgroundColor:'#F7E396' , borderRadius:'15px' , mt:1}}>
+                        <Typography variant='body1' sx={{my:1}}>
+                          خرید
+                        </Typography>
+                      </Card>
+                   </Grid>
+                   <Grid item xs={6}>
+                      <Card variant='outlined' sx={{textAlign:'center', backgroundImage:'linear-gradient(to bottom left, #f49c9c, #d32626 )' , borderRadius:'15px'}}>
+                        <Typography variant='body1' sx={{my:2, color:'white'}}>
+                          {goldData.gram.formattedSell || 'N/A'}
+                        </Typography>
+                      </Card>
+                      <Card variant='outlined' sx={{textAlign:'center', backgroundColor:'#F7E396' , borderRadius:'15px' , mt:1}}>
+                        <Typography variant='body1' sx={{my:1}}>
+                          فروش
+                        </Typography>
+                      </Card>
+                   </Grid>
+                </Grid>
+              </Grid>
+              )}
+
+
+              {sellMessage && (
+                <Grid item xs={12} key={sellMessage.id}>
                   <Card variant="outlined">
                     <CardContent>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                         <Typography variant="caption" color="text.secondary">
-                          {new Date(message.date).toLocaleString()}
+                          {new Date(sellMessage.date).toLocaleString()}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          ID: {message.id}
+                          ID: {sellMessage.id} (فروش)
                         </Typography>
                       </Box>
                       <Typography variant="body1" component="div" sx={{ whiteSpace: 'pre-wrap' }}>
-                        {message.text || '(No text content)'}
+                        {sellMessage.text || '(No text content)'}
                       </Typography>
                     </CardContent>
                   </Card>
                 </Grid>
-              ))}
-            </Grid>
-          </>
-        )}
-      </Container>
-    </>
-  );
-}
+              )}
 
+              {buyMessage && (
+                <Grid item xs={12} key={buyMessage.id}>
+                  <Card variant="outlined">
+                    <CardContent>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                        <Typography variant="caption" color="text.secondary">
+                          {new Date(buyMessage.date).toLocaleString()}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          ID: {buyMessage.id} (خرید)
+                        </Typography>
+                      </Box>
+                      <Typography variant="body1" component="div" sx={{ whiteSpace: 'pre-wrap' }}>
+                        {buyMessage.text || '(No text content)'}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              )}
+            </Grid>
+          </>   
+  )}   </Container>  
+  </>
+)};
