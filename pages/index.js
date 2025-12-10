@@ -52,7 +52,7 @@ const PriceSection = ({ title, time, buyPrice, sellPrice, buySub, sellSub, isHea
 
             {/* Buy Section (Green) */}
             <Grid item xs={4}>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                 <Box sx={{
                   bgcolor: '#10B981', // Green
                   color: 'white',
@@ -86,7 +86,7 @@ const PriceSection = ({ title, time, buyPrice, sellPrice, buySub, sellSub, isHea
 
             {/* Sell Section (Red) */}
             <Grid item xs={4}>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                 <Box sx={{
                   bgcolor: '#EF4444', // Red
                   color: 'white',
