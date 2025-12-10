@@ -381,7 +381,10 @@ async function fetchGoldMessages() {
     const result = await client.getMessages(entity, { limit: 10 });
 
     const relevantMessages = result.filter(msg => 
-      msg.message && msg.message.includes('آبشده نقدی فردا')
+      msg.message && (
+        msg.message.includes('آبشده نقدی فردا') ||
+        msg.message.includes('آبشده نقدی')
+      )
     );
 
     if (relevantMessages.length > 0) {
@@ -399,8 +402,17 @@ async function fetchGoldMessages() {
           const normalizedText = text.replace(/هر\s*گرم/g, 'SPLIT_HERE_GRAM');
           const parts = normalizedText.split('SPLIT_HERE_GRAM');
           
-          const meltPart = parts[0]; // "Melt" section is usually first
-          const gramPart = parts[1] || ''; // "Gram" section is usually second
+          let meltPart = parts[0]; // "Melt" section is usually first
+          let gramPart = parts[1] || ''; // "Gram" section is usually second
+
+          // If only one part and it contains specific keywords, try to identify which part it is
+          if (!gramPart && meltPart) {
+              if (meltPart.includes('گرم') && !meltPart.includes('ابشده')) {
+                  // It might be just the gram part
+                  gramPart = meltPart;
+                  meltPart = '';
+              }
+          }
 
           let meltSell = null;
           let meltBuy = null;
@@ -411,6 +423,11 @@ async function fetchGoldMessages() {
           const extractBuySell = (textPart) => {
               const sellMatch = textPart.match(/فروش\s*:\s*([\d,]+)/);
               const buyMatch = textPart.match(/خرید\s*:\s*([\d,]+)/);
+              
+              // console.log('Extracting from part:', textPart.substring(0, 50) + '...');
+              // console.log('Buy match:', buyMatch ? buyMatch[1] : 'null');
+              // console.log('Sell match:', sellMatch ? sellMatch[1] : 'null');
+
               return {
                   sell: sellMatch ? sellMatch[1] : null,
                   buy: buyMatch ? buyMatch[1] : null
