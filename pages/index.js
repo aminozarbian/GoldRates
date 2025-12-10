@@ -27,20 +27,20 @@ import goldRating from './pics/goldbar.png';
 const PriceSection = ({ title, time, buyPrice, sellPrice, buySub, sellSub, isHeader, showGeram }) => {
   return (
     <>
-      <Card sx={{ mb: 2, overflow: 'visible' }}>
+      <Card sx={{ mb: 2 }}>
         <Box sx={{ px: 2, py: 1 }}>
           {/* Header Row */}
           <Grid container spacing={2} dir="rtl">
             <Grid item xs={4}>
               <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
                 <Box sx={{ textAlign: 'center' }}>
-                  <Typography variant="h6" sx={{ fontWeight: 'bold', fontSize: '1rem' }}>
+                  <Typography variant="body2" >
                     {title}
                   </Typography>
                   <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'text.secondary', mt: 0.5 }}>
                     <AccessTimeIcon sx={{ fontSize: 14, color: 'red' }} />
-                    <Box sx={{ px: 0.5 }} />
-                    <Typography variant="caption" sx={{ mr: 0.5, fontSize: '0.75rem', color: 'red' }}>
+                    <Box sx={{ px: 0.2 }} />
+                    <Typography variant="caption" sx={{ mr: 0.5, color: 'red' }}>
                       {time}
                     </Typography>
                   </Box>
@@ -61,8 +61,8 @@ const PriceSection = ({ title, time, buyPrice, sellPrice, buySub, sellSub, isHea
                   textAlign: 'center',
                   boxShadow: '0 2px 8px rgba(16, 185, 129, 0.2)'
                 }}>
-                  <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                    {buyPrice || '---'} تومان
+                  <Typography variant="caption">
+                    {buyPrice || '---'}
                   </Typography>
                 </Box>
                 {showGeram && (
@@ -73,8 +73,8 @@ const PriceSection = ({ title, time, buyPrice, sellPrice, buySub, sellSub, isHea
                     textAlign: 'center',
                     border: '1px solid #FCD34D'
                   }}>
-                    <Typography variant="caption" sx={{ fontWeight: 'bold', color: '#854D0E' }}>
-                      هرگرم {buySub || '---'} تومان
+                    <Typography variant="caption">
+                      هرگرم {buySub || '---'}
                     </Typography>
                   </Box>
                 )}
@@ -95,8 +95,8 @@ const PriceSection = ({ title, time, buyPrice, sellPrice, buySub, sellSub, isHea
                   textAlign: 'center',
                   boxShadow: '0 2px 8px rgba(239, 68, 68, 0.2)'
                 }}>
-                  <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                    {sellPrice || '---'} تومان
+                  <Typography variant="caption">
+                    {sellPrice || '---'}
                   </Typography>
                 </Box>
                 {showGeram && (
@@ -107,8 +107,8 @@ const PriceSection = ({ title, time, buyPrice, sellPrice, buySub, sellSub, isHea
                     textAlign: 'center',
                     border: '1px solid #FCD34D'
                   }}>
-                    <Typography variant="caption" sx={{ fontWeight: 'bold', color: '#854D0E' }}>
-                      هرگرم {sellSub || '---'} تومان
+                    <Typography variant="caption">
+                      هرگرم {sellSub || '---'}
                     </Typography>
                   </Box>
                 )}
