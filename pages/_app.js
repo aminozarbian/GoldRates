@@ -1,3 +1,4 @@
+import Head from 'next/head';
 import { CacheProvider } from '@emotion/react';
 import createCache from '@emotion/cache';
 import { prefixer } from 'stylis';
@@ -31,6 +32,9 @@ const theme = createTheme({
 export default function App({ Component, pageProps }) {
   return (
     <CacheProvider value={cacheRtl}>
+      <Head>
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <Component {...pageProps} />
