@@ -297,12 +297,12 @@ export default function Home() {
           time={`امروز ${currentTime}`}
           buyPrice={
             mtData?.broker_xau_usd?.ask && buyMessage?.number
-              ? (mtData.broker_xau_usd.ask * buyMessage.number / 9.5726).toLocaleString('en-US', { maximumFractionDigits: 2 })
+              ? (mtData.broker_xau_usd.ask * buyMessage.number / 9.5726).toLocaleString('en-US', { maximumFractionDigits: 0 })
               : '-'
           }
           sellPrice={
             mtData?.broker_xau_usd?.bid && sellMessage?.number
-              ? (mtData.broker_xau_usd.bid * sellMessage.number / 9.5726).toLocaleString('en-US', { maximumFractionDigits: 2 })
+              ? (mtData.broker_xau_usd.bid * sellMessage.number / 9.5726).toLocaleString('en-US', { maximumFractionDigits: 0 })
               : '-'
           }
           buySub="---"
