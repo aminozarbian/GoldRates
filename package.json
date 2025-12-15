@@ -4,9 +4,10 @@
   "description": "Next.js app that reads messages from Telegram channel",
   "scripts": {
     "dev": "node server.js",
+    "dev:full": "concurrently \"node server.js\" \"python mt5_bridge.py\"",
     "build": "next build",
     "start": "node server.js",
-    "start:prod": "NODE_ENV=production node server.js",
+    "start:prod": "cross-env NODE_ENV=production node server.js",
     "lint": "next lint",
     "pm2:start": "pm2 start ecosystem.config.js",
     "pm2:stop": "pm2 stop telegram-reader",
@@ -30,6 +31,8 @@
     "telegram": "^2.19.4"
   },
   "devDependencies": {
+    "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0",
     "eslint": "^8.54.0",
     "eslint-config-next": "^14.2.33"
   }

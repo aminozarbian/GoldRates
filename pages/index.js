@@ -129,6 +129,7 @@ export default function Home() {
   const [sellMessage, setSellMessage] = useState(null);
   const [buyMessage, setBuyMessage] = useState(null);
   const [goldData, setGoldData] = useState(null);
+  const [mtData, setMtData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -151,6 +152,7 @@ export default function Home() {
         setSellMessage(data.sellMessage || null);
         setBuyMessage(data.buyMessage || null);
         setGoldData(data.goldData || null);
+        setMtData(data.mtData || null);
         setConnected(data.connected || false);
       } else {
         setError('Failed to fetch messages');
@@ -244,8 +246,6 @@ export default function Home() {
       )}
 
       <Container maxWidth="sm" sx={{ mt: 2, px: 2 }}>
-        {/* Warning Banner */}
-
         {/* Action Buttons */}
         <Button
           fullWidth
@@ -263,7 +263,7 @@ export default function Home() {
             boxShadow: 'none'
           }}
         >
-          اونس لحظه ای : -
+          اونس لحظه ای : {mtData?.broker_xau_usd?.bid || '-'} دلار
         </Button>
 
 
@@ -287,6 +287,24 @@ export default function Home() {
           time={`امروز ${currentTime}`}
           buyPrice={buyMessage ? (buyMessage.formattedNumber || buyMessage.number) : '---'}
           sellPrice={sellMessage ? (sellMessage.formattedNumber || sellMessage.number) : '---'}
+          buySub="---"
+          sellSub="---"
+          showGeram={false}
+        />
+        {/* Global Price */}
+        <PriceSection
+          title="مظنه جهانی"
+          time={`امروز ${currentTime}`}
+          buyPrice={
+            mtData?.broker_xau_usd?.ask && buyMessage?.number
+              ? (mtData.broker_xau_usd.ask * buyMessage.number / 9.5726).toLocaleString('en-US', { maximumFractionDigits: 2 })
+              : '-'
+          }
+          sellPrice={
+            mtData?.broker_xau_usd?.bid && sellMessage?.number
+              ? (mtData.broker_xau_usd.bid * sellMessage.number / 9.5726).toLocaleString('en-US', { maximumFractionDigits: 2 })
+              : '-'
+          }
           buySub="---"
           sellSub="---"
           showGeram={false}

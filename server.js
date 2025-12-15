@@ -6,6 +6,8 @@ const next = require('next');
 const { TelegramClient } = require('telegram');
 const { StringSession } = require('telegram/sessions');
 const input = require('input');
+const fs = require('fs');
+const path = require('path');
 
 const dev = process.env.NODE_ENV !== 'production';
 const app = next({ dev });
@@ -473,6 +475,20 @@ async function fetchGoldMessages() {
   }
 }
 
+// Helper to get MT5 Gold Price
+function getMtGoldPrice() {
+  try {
+    const dataPath = path.join(__dirname, 'data', 'mt_prices.json');
+    if (fs.existsSync(dataPath)) {
+      const fileContent = fs.readFileSync(dataPath, 'utf8');
+      return JSON.parse(fileContent);
+    }
+  } catch (error) {
+    console.error('Error reading MT gold price:', error.message);
+  }
+  return null;
+}
+
 // Initialize and start fetching messages
 (async () => {
   client = await initializeTelegramClient();
@@ -499,10 +515,12 @@ app.prepare().then(() => {
 
   // API endpoint to get messages
   server.get('/api/messages', (req, res) => {
+    const mtData = getMtGoldPrice();
     res.json({ 
       sellMessage, 
       buyMessage, 
       goldData,
+      mtData,
       success: true, 
       connected: isConnected 
     });
@@ -516,10 +534,13 @@ app.prepare().then(() => {
     if (CHANNEL_USERNAME) await fetchTelegramMessages();
     if (GOLD_CHANNEL_USERNAME) await fetchGoldMessages();
     
+    const mtData = getMtGoldPrice();
+
     res.json({ 
       sellMessage, 
       buyMessage, 
       goldData,
+      mtData,
       success: true, 
       messageInfo: 'Messages fetched successfully', 
       connected: isConnected 
