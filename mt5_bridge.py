@@ -3,6 +3,9 @@ import json
 import time
 import os
 import logging
+import signal
+import sys
+import traceback
 from datetime import datetime
 
 # Configuration
@@ -22,11 +25,28 @@ logging.basicConfig(
     ]
 )
 
+def signal_handler(sig, frame):
+    logging.info(f"Received signal: {sig}")
+    if sig == signal.SIGINT:
+        logging.info("Signal is SIGINT (KeyboardInterrupt/PM2 Stop)")
+        raise KeyboardInterrupt
+    elif sig == signal.SIGTERM:
+        logging.info("Signal is SIGTERM (Termination Request)")
+        sys.exit(0)
+
+# Register signal handlers
+signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGTERM, signal_handler)
+
 def initialize_mt5():
-    if not mt5.initialize():
-        logging.error(f"initialize() failed, error code = {mt5.last_error()}")
+    try:
+        if not mt5.initialize():
+            logging.error(f"initialize() failed, error code = {mt5.last_error()}")
+            return False
+        return True
+    except Exception as e:
+        logging.error(f"Exception during mt5.initialize(): {e}")
         return False
-    return True
 
 def get_price_data():
     symbol_info = mt5.symbol_info(SYMBOL)
@@ -47,8 +67,6 @@ def get_price_data():
         return None
 
     # Calculate spread
-    # Note: MT5 spread is often in points. 
-    # Real spread = ask - bid
     spread = tick.ask - tick.bid
     
     return {
@@ -74,7 +92,17 @@ def save_to_json(data):
 
 def main():
     logging.info("Starting MT5 Bridge...")
-    if not initialize_mt5():
+    
+    # Check if MT5 is actually installed/callable
+    try:
+        if not initialize_mt5():
+            logging.error("Failed to initialize MT5. Retrying in 60 seconds...")
+            # Sleep to prevent rapid restarts/flapping in PM2
+            time.sleep(60)
+            return
+    except Exception as e:
+        logging.error(f"Critical error during initialization: {e}")
+        time.sleep(60)
         return
 
     logging.info(f"Connected to MT5. Fetching {SYMBOL}...")
@@ -87,11 +115,18 @@ def main():
             
             time.sleep(UPDATE_INTERVAL)
     except KeyboardInterrupt:
-        logging.info("Stopping bridge...")
+        logging.info("Stopping bridge due to KeyboardInterrupt (SIGINT)...")
+    except SystemExit:
+        logging.info("Stopping bridge due to SystemExit...")
     except Exception as e:
-        logging.exception(f"Unexpected error: {e}")
+        logging.error(f"Unexpected error in main loop: {e}")
+        logging.error(traceback.format_exc())
+        # Sleep a bit before crashing so logs aren't flooded
+        time.sleep(10)
     finally:
+        logging.info("Shutting down MT5 connection...")
         mt5.shutdown()
+        logging.info("Bridge stopped.")
 
 if __name__ == "__main__":
     main()
