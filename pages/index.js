@@ -145,7 +145,8 @@ export default function Home() {
     setError(null);
 
     try {
-      const response = await fetch('/api/messages');
+      // Add timestamp to query to prevent browser caching
+      const response = await fetch(`/api/messages?t=${new Date().getTime()}`);
       const data = await response.json();
 
       if (data.success) {

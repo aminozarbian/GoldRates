@@ -515,6 +515,12 @@ app.prepare().then(() => {
 
   // API endpoint to get messages
   server.get('/api/messages', (req, res) => {
+    // Add strong no-cache headers
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.setHeader('Surrogate-Control', 'no-store'); // For CDNs
+
     const mtData = getMtGoldPrice();
     res.json({ 
       sellMessage, 
