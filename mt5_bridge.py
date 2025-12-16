@@ -2,35 +2,48 @@ import MetaTrader5 as mt5
 import json
 import time
 import os
+import logging
 from datetime import datetime
 
 # Configuration
 SYMBOL = "XAUUSD"
 DATA_FILE = os.path.join(os.path.dirname(__file__), 'data', 'mt_prices.json')
+LOG_FILE = os.path.join(os.path.dirname(__file__), 'logs', 'mt5_bridge.log')
 UPDATE_INTERVAL = 5  # seconds
+
+# Setup logging
+os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s [%(levelname)s] %(message)s',
+    handlers=[
+        logging.FileHandler(LOG_FILE),
+        logging.StreamHandler()
+    ]
+)
 
 def initialize_mt5():
     if not mt5.initialize():
-        print(f"initialize() failed, error code = {mt5.last_error()}")
+        logging.error(f"initialize() failed, error code = {mt5.last_error()}")
         return False
     return True
 
 def get_price_data():
     symbol_info = mt5.symbol_info(SYMBOL)
     if symbol_info is None:
-        print(f"{SYMBOL} not found, can not call symbol_info()")
+        logging.error(f"{SYMBOL} not found, can not call symbol_info()")
         return None
 
     if not symbol_info.visible:
-        print(f"{SYMBOL} is not visible, trying to switch on")
+        logging.info(f"{SYMBOL} is not visible, trying to switch on")
         if not mt5.symbol_select(SYMBOL, True):
-            print(f"symbol_select({SYMBOL}) failed, exit")
+            logging.error(f"symbol_select({SYMBOL}) failed, exit")
             return None
 
     # Get tick data
     tick = mt5.symbol_info_tick(SYMBOL)
     if tick is None:
-        print(f"symbol_info_tick({SYMBOL}) failed")
+        logging.error(f"symbol_info_tick({SYMBOL}) failed")
         return None
 
     # Calculate spread
@@ -55,15 +68,16 @@ def save_to_json(data):
         
         with open(DATA_FILE, 'w') as f:
             json.dump({"broker_xau_usd": data}, f, indent=2)
+        logging.info(f"{data['symbol']} | Bid: {data['bid']} | Ask: {data['ask']} | Spread: {data['spread']}")
     except Exception as e:
-        print(f"Error saving JSON: {e}")
+        logging.error(f"Error saving JSON: {e}")
 
 def main():
-    print("Starting MT5 Bridge...", flush=True)
+    logging.info("Starting MT5 Bridge...")
     if not initialize_mt5():
         return
 
-    print(f"Connected to MT5. Fetching {SYMBOL}...", flush=True)
+    logging.info(f"Connected to MT5. Fetching {SYMBOL}...")
     
     try:
         while True:
@@ -73,7 +87,9 @@ def main():
             
             time.sleep(UPDATE_INTERVAL)
     except KeyboardInterrupt:
-        print("\nStopping bridge...")
+        logging.info("Stopping bridge...")
+    except Exception as e:
+        logging.exception(f"Unexpected error: {e}")
     finally:
         mt5.shutdown()
 
