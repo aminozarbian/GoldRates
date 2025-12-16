@@ -55,7 +55,6 @@ def save_to_json(data):
         
         with open(DATA_FILE, 'w') as f:
             json.dump({"broker_xau_usd": data}, f, indent=2)
-        print(f"[{datetime.now().strftime('%H:%M:%S')}] {data['symbol']} | Bid: {data['bid']} | Ask: {data['ask']} | Spread: {data['spread']}", flush=True)
     except Exception as e:
         print(f"Error saving JSON: {e}")
 
