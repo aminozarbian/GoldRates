@@ -134,6 +134,8 @@ export default function Home() {
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [connected, setConnected] = useState(false);
+  const [buyHaratMessage , setBuyHaratMessage] = useState(null)
+  const [sellHaratMessage , setSellHaratMessage] = useState(null)
   const [navValue, setNavValue] = useState(0); // Default to 'Market'
 
   const fetchMessages = async (isRefresh = false) => {
@@ -152,6 +154,8 @@ export default function Home() {
       if (data.success) {
         setSellMessage(data.sellMessage || null);
         setBuyMessage(data.buyMessage || null);
+        setBuyHaratMessage(data.buyHaratMessage || null);
+        setSellHaratMessage(data.sellHaratMessage || null)
         setGoldData(data.goldData || null);
         setMtData(data.mtData || null);
         setConnected(data.connected || false);
@@ -306,6 +310,16 @@ export default function Home() {
           time={`امروز ${currentTime}`}
           buyPrice={sellMessage ? (sellMessage.formattedNumber || sellMessage.number) : '---'}
           sellPrice={buyMessage ? (buyMessage.formattedNumber || buyMessage.number) : '---'}
+          buySub="---"
+          sellSub="---"
+          showGeram={false}
+        />
+        {/* Dollar Harat*/}
+        <PriceSection
+          title="هرات فردایی"
+          time={`امروز ${currentTime}`}
+          buyPrice={sellHaratMessage? sellHaratMessage.formattedNumber : '---'}
+          sellPrice={buyHaratMessage ? buyHaratMessage.formattedNumber : '---'}
           buySub="---"
           sellSub="---"
           showGeram={false}

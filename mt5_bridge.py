@@ -86,7 +86,6 @@ def save_to_json(data):
         
         with open(DATA_FILE, 'w') as f:
             json.dump({"broker_xau_usd": data}, f, indent=2)
-        logging.info(f"{data['symbol']} | Bid: {data['bid']} | Ask: {data['ask']} | Spread: {data['spread']}")
     except Exception as e:
         logging.error(f"Error saving JSON: {e}")
 
