@@ -73,7 +73,7 @@ const PriceSection = ({ title, time, buyPrice, sellPrice, buySub, sellSub, isHea
                     textAlign: 'center',
                     border: '1px solid #FCD34D'
                   }}>
-                    <Typography variant="body">
+                    <Typography variant="body2">
                       گرم {buySub || '---'}
                     </Typography>
                   </Box>
