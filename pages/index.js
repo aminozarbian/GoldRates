@@ -280,18 +280,8 @@ export default function Home() {
           buySub={goldData?.gram?.formattedSell}
           sellSub={goldData?.gram?.formattedBuy}
           showGeram={true}
-        />
+        />   
 
-        {/* Dollar (Real Data) */}
-        <PriceSection
-          title="دلار تهران"
-          time={`امروز ${currentTime}`}
-          buyPrice={sellMessage ? (sellMessage.formattedNumber || sellMessage.number) : '---'}
-          sellPrice={buyMessage ? (buyMessage.formattedNumber || buyMessage.number) : '---'}
-          buySub="---"
-          sellSub="---"
-          showGeram={false}
-        />
         {/* Global Price */}
         <PriceSection
           title="مظنه جهانی"
@@ -306,6 +296,16 @@ export default function Home() {
               ? (mtData.broker_xau_usd.ask * buyMessage.number / 9.5726).toLocaleString('en-US', { maximumFractionDigits: 0 })
               : '-'
           }
+          buySub="---"
+          sellSub="---"
+          showGeram={false}
+        />
+        {/* Dollar (Real Data) */}
+        <PriceSection
+          title="دلار تهران"
+          time={`امروز ${currentTime}`}
+          buyPrice={sellMessage ? (sellMessage.formattedNumber || sellMessage.number) : '---'}
+          sellPrice={buyMessage ? (buyMessage.formattedNumber || buyMessage.number) : '---'}
           buySub="---"
           sellSub="---"
           showGeram={false}
