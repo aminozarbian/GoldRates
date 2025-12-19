@@ -1,11 +1,11 @@
 {
   "broker_xau_usd": {
     "symbol": "XAUUSD",
-    "bid": 4316.04,
-    "ask": 4316.35,
-    "spread": 0.31,
-    "spread_points": 31,
-    "timestamp": "2025-12-16T17:39:59.038482",
-    "time": 1765901398
+    "bid": 4327.14,
+    "ask": 4327.47,
+    "spread": 0.33,
+    "spread_points": 33,
+    "timestamp": "2025-12-19T12:19:51.991160",
+    "time": 1766141330
   }
 }

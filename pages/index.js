@@ -31,7 +31,7 @@ const PriceSection = ({ title, time, buyPrice, sellPrice, buySub, sellSub, isHea
         <Box sx={{ px: 2, py: 1 }}>
           {/* Header Row */}
           <Grid container spacing={2} dir="rtl">
-            <Grid item sx={{px:0}} xs={4}>
+            <Grid item sx={{px:"0 !important"}} xs={4}>
               <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
                 <Box sx={{ textAlign: 'center' }}>
                   <Typography variant="body2" >
@@ -51,29 +51,29 @@ const PriceSection = ({ title, time, buyPrice, sellPrice, buySub, sellSub, isHea
             {/* Prices Row */}
 
             {/* Buy Section (Green) */}
-            <Grid item xs={4}>
+            <Grid item xs={4} sx={{pl:"7px !important"}}>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                 <Box sx={{
                   bgcolor: '#10B981', // Green
                   color: 'white',
-                  p: 1.5,
+                  px: 1.5,
                   borderRadius: 2,
                   textAlign: 'center',
                   boxShadow: '0 2px 8px rgba(16, 185, 129, 0.2)'
                 }}>
-                  <Typography variant="caption">
+                  <Typography variant="body">
                     {buyPrice || '---'}
                   </Typography>
                 </Box>
                 {showGeram && (
                   <Box sx={{
                     bgcolor: '#FDE047', // Yellow
-                    p: 0.5,
+                    px: 0.5,
                     borderRadius: 2,
                     textAlign: 'center',
                     border: '1px solid #FCD34D'
                   }}>
-                    <Typography variant="caption">
+                    <Typography variant="body">
                       گرم {buySub || '---'}
                     </Typography>
                   </Box>
@@ -85,29 +85,29 @@ const PriceSection = ({ title, time, buyPrice, sellPrice, buySub, sellSub, isHea
             </Grid>
 
             {/* Sell Section (Red) */}
-            <Grid item xs={4}>
+            <Grid item xs={4} sx={{pl:"7px !important"}}>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                 <Box sx={{
                   bgcolor: '#EF4444', // Red
                   color: 'white',
-                  p: 1.5,
+                  px: 1.5,
                   borderRadius: 2,
                   textAlign: 'center',
                   boxShadow: '0 2px 8px rgba(239, 68, 68, 0.2)'
                 }}>
-                  <Typography variant="caption">
+                  <Typography variant="body">
                     {sellPrice || '---'}
                   </Typography>
                 </Box>
                 {showGeram && (
                   <Box sx={{
                     bgcolor: '#FDE047', // Yellow
-                    p: 0.5,
+                    px: 0.5,
                     borderRadius: 2,
                     textAlign: 'center',
                     border: '1px solid #FCD34D'
                   }}>
-                    <Typography variant="caption">
+                    <Typography variant="body">
                       گرم {sellSub || '---'}
                     </Typography>
                   </Box>
