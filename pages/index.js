@@ -275,10 +275,10 @@ export default function Home() {
         <PriceSection
           title="آبشده فردایی ایران"
           time={`امروز ${currentTime}`}
-          buyPrice={goldData?.melt?.formattedBuy}
-          sellPrice={goldData?.melt?.formattedSell}
-          buySub={goldData?.gram?.formattedBuy}
-          sellSub={goldData?.gram?.formattedSell}
+          buyPrice={goldData?.melt?.formattedSell}
+          sellPrice={goldData?.melt?.formattedBuy} 
+          buySub={goldData?.gram?.formattedSell}
+          sellSub={goldData?.gram?.formattedBuy}
           showGeram={true}
         />
 
@@ -286,8 +286,8 @@ export default function Home() {
         <PriceSection
           title="دلار تهران"
           time={`امروز ${currentTime}`}
-          buyPrice={buyMessage ? (buyMessage.formattedNumber || buyMessage.number) : '---'}
-          sellPrice={sellMessage ? (sellMessage.formattedNumber || sellMessage.number) : '---'}
+          buyPrice={sellMessage ? (sellMessage.formattedNumber || sellMessage.number) : '---'}
+          sellPrice={buyMessage ? (buyMessage.formattedNumber || buyMessage.number) : '---'}
           buySub="---"
           sellSub="---"
           showGeram={false}
@@ -297,13 +297,13 @@ export default function Home() {
           title="مظنه جهانی"
           time={`امروز ${currentTime}`}
           buyPrice={
-            mtData?.broker_xau_usd?.ask && buyMessage?.number
-              ? (mtData.broker_xau_usd.ask * buyMessage.number / 9.5726).toLocaleString('en-US', { maximumFractionDigits: 0 })
-              : '-'
-          }
-          sellPrice={
             mtData?.broker_xau_usd?.bid && sellMessage?.number
               ? (mtData.broker_xau_usd.bid * sellMessage.number / 9.5726).toLocaleString('en-US', { maximumFractionDigits: 0 })
+              : '-'
+          } 
+          sellPrice={
+            mtData?.broker_xau_usd?.ask && buyMessage?.number
+              ? (mtData.broker_xau_usd.ask * buyMessage.number / 9.5726).toLocaleString('en-US', { maximumFractionDigits: 0 })
               : '-'
           }
           buySub="---"
