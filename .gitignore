@@ -15,6 +15,7 @@
 # production
 /build
 ecosystem.config.js
+/logs/mt5_bridge.log
 
 # misc
 .DS_Store
