@@ -31,7 +31,7 @@ const PriceSection = ({ title, time, buyPrice, sellPrice, buySub, sellSub, isHea
         <Box sx={{ px: 2, py: 1 }}>
           {/* Header Row */}
           <Grid container spacing={2} dir="rtl">
-            <Grid item xs={4}>
+            <Grid item sx={{px:0}} xs={4}>
               <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
                 <Box sx={{ textAlign: 'center' }}>
                   <Typography variant="body2" >
