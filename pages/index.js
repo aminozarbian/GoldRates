@@ -74,7 +74,7 @@ const PriceSection = ({ title, time, buyPrice, sellPrice, buySub, sellSub, isHea
                     border: '1px solid #FCD34D'
                   }}>
                     <Typography variant="caption">
-                      هرگرم {buySub || '---'}
+                      گرم {buySub || '---'}
                     </Typography>
                   </Box>
                 )}
@@ -108,7 +108,7 @@ const PriceSection = ({ title, time, buyPrice, sellPrice, buySub, sellSub, isHea
                     border: '1px solid #FCD34D'
                   }}>
                     <Typography variant="caption">
-                      هرگرم {sellSub || '---'}
+                      گرم {sellSub || '---'}
                     </Typography>
                   </Box>
                 )}
