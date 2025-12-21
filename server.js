@@ -8,6 +8,22 @@ const { StringSession } = require('telegram/sessions');
 const input = require('input');
 const fs = require('fs');
 const path = require('path');
+const webpush = require('web-push');
+
+// Setup Web Push
+const publicVapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || 'BM9QV3PkyEaDckMG_zqXF32kKMkcuUyiAkQP3IL093_C11BT-XgQAtNt0GjRYwVbRT_oW6Q0XiVvhzS5ZQ97jD4';
+const privateVapidKey = process.env.VAPID_PRIVATE_KEY || 'UmeQ6ZZHC0bEAfMQuvJGXVRJLqC0WiuJAA6uclSmVtE';
+const webPushEmail = process.env.WEB_PUSH_EMAIL || 'mailto:admin@example.com';
+
+try {
+  webpush.setVapidDetails(
+    webPushEmail,
+    publicVapidKey,
+    privateVapidKey
+  );
+} catch (err) {
+  console.error('Error setting up Web Push:', err);
+}
 
 const dev = process.env.NODE_ENV !== 'production';
 const app = next({ dev });
@@ -1039,6 +1055,53 @@ app.prepare().then(() => {
       messageInfo: 'Messages fetched successfully',
       connected: isConnected
     });
+  });
+
+  // Subscribe Route for Push Notifications
+  server.post('/api/subscribe', (req, res) => {
+    const subscription = req.body;
+    const subsPath = path.join(__dirname, 'data', 'subscriptions.json');
+    let subs = [];
+    try {
+      if (fs.existsSync(subsPath)) {
+        subs = JSON.parse(fs.readFileSync(subsPath, 'utf8'));
+      }
+      // Check if exists
+      const exists = subs.find(s => s.endpoint === subscription.endpoint);
+      if (!exists) {
+        subs.push(subscription);
+        fs.writeFileSync(subsPath, JSON.stringify(subs, null, 2));
+      }
+      res.status(201).json({ success: true });
+    } catch (err) {
+      console.error('Error saving subscription:', err);
+      res.status(500).json({ error: 'Failed to save subscription' });
+    }
+  });
+
+  // Send Notification Route
+  server.post('/api/send-notification', (req, res) => {
+    const { title, body } = req.body;
+    const payload = JSON.stringify({ title, body });
+    const subsPath = path.join(__dirname, 'data', 'subscriptions.json');
+
+    try {
+      if (!fs.existsSync(subsPath)) return res.json({ success: true, count: 0 });
+
+      const subs = JSON.parse(fs.readFileSync(subsPath, 'utf8'));
+
+      // Send to all
+      Promise.all(subs.map(sub =>
+        webpush.sendNotification(sub, payload).catch(err => {
+          console.error('Error sending notification:', err);
+          // If 410 Gone, remove subscription?
+          // For now just log
+        })
+      )).then(() => res.json({ success: true, count: subs.length }));
+    } catch (err) {
+      console.error('Error sending notifications:', err);
+      res.status(500).json({ error: 'Failed to send notifications' });
+    }
   });
 
   // Handle all other requests with Next.js

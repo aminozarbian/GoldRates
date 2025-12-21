@@ -1,0 +1,22 @@
+{
+  "name": "Gold Rates Tracker",
+  "short_name": "GoldRates",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F3F4F6",
+  "theme_color": "#0F2027",
+  "description": "Live Gold and Currency Rates",
+  "icons": [
+    {
+      "src": "/goldbar.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/goldbar.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
+

@@ -24,11 +24,13 @@
     "express": "^4.18.2",
     "input": "^1.0.1",
     "next": "^14.2.33",
+    "next-pwa": "^5.6.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "stylis": "^4.2.0",
     "stylis-plugin-rtl": "^2.1.0",
-    "telegram": "^2.19.4"
+    "telegram": "^2.19.4",
+    "web-push": "^3.6.7"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",

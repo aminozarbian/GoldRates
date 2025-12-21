@@ -33,7 +33,11 @@ export default function App({ Component, pageProps }) {
   return (
     <CacheProvider value={cacheRtl}>
       <Head>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="theme-color" content="#0F2027" />
         <link rel="icon" href="/favicon.ico" />
+        <link rel="manifest" href="/manifest.json" />
+        <link rel="apple-touch-icon" href="/goldbar.png" />
       </Head>
       <ThemeProvider theme={theme}>
         <CssBaseline />

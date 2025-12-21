@@ -23,6 +23,23 @@ import {
 import Image from 'next/image';
 import goldRating from './pics/goldbar.png';
 
+const PUBLIC_VAPID_KEY = 'BM9QV3PkyEaDckMG_zqXF32kKMkcuUyiAkQP3IL093_C11BT-XgQAtNt0GjRYwVbRT_oW6Q0XiVvhzS5ZQ97jD4';
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding)
+    .replace(/\-/g, '+')
+    .replace(/_/g, '/');
+
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+
 // Custom Price Card Component
 const PriceSection = ({ title, time, buyPrice, sellPrice, buySub, sellSub, isHeader, showGeram }) => {
   return (
@@ -184,6 +201,50 @@ export default function Home() {
     }
   };
 
+  const subscribeToPush = async () => {
+    if ('serviceWorker' in navigator) {
+      try {
+        const register = await navigator.serviceWorker.ready;
+        const subscription = await register.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(PUBLIC_VAPID_KEY)
+        });
+
+        await fetch('/api/subscribe', {
+          method: 'POST',
+          body: JSON.stringify(subscription),
+          headers: {
+            'content-type': 'application/json'
+          }
+        });
+        alert('Subscribed successfully!');
+      } catch (err) {
+        console.error('Subscription failed:', err);
+        alert('Failed to subscribe: ' + err.message);
+      }
+    } else {
+        alert('Service Worker not supported');
+    }
+  };
+
+  const sendTestNotification = async () => {
+    try {
+        await fetch('/api/send-notification', {
+        method: 'POST',
+        body: JSON.stringify({
+            title: 'Test Notification',
+            body: 'This is a test notification from Gold Rates!'
+        }),
+        headers: {
+            'content-type': 'application/json'
+        }
+        });
+        alert('Notification sent!');
+    } catch (err) {
+        alert('Error sending notification');
+    }
+  };
+
   const [currentTime, setCurrentTime] = useState('');
   const [todayDate, setTodayDate] = useState('');
 
@@ -296,13 +357,14 @@ export default function Home() {
           title="مظنه جهانی"
           time={`امروز ${currentTime}`}
           buyPrice={
-            mtData?.broker_xau_usd?.bid && sellMessage?.number
-              ? (mtData.broker_xau_usd.bid * sellMessage.number / 9.5726).toLocaleString('en-US', { maximumFractionDigits: 0 })
+            mtData?.broker_xau_usd?.ask && sellMessage?.number
+              ? (mtData.broker_xau_usd.ask * sellMessage.number / 9.5726).toLocaleString('en-US', { maximumFractionDigits: 0 })
               : '-'
+            
           } 
           sellPrice={
-            mtData?.broker_xau_usd?.ask && buyMessage?.number
-              ? (mtData.broker_xau_usd.ask * buyMessage.number / 9.5726).toLocaleString('en-US', { maximumFractionDigits: 0 })
+            mtData?.broker_xau_usd?.bid && buyMessage?.number
+              ? (mtData.broker_xau_usd.bid * buyMessage.number / 9.5726).toLocaleString('en-US', { maximumFractionDigits: 0 })
               : '-'
           }
           buySub="---"
@@ -339,6 +401,15 @@ export default function Home() {
           sellSub="---"
           showGeram={false}
         />
+
+        <Box sx={{ mt: 4, mb: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Button variant="outlined" color="primary" onClick={subscribeToPush} fullWidth>
+                Subscribe to Notifications
+            </Button>
+            <Button variant="outlined" color="secondary" onClick={sendTestNotification} fullWidth>
+                Test Notification
+            </Button>
+        </Box>
       </Container>
 
       {/* Bottom Navigation */}
