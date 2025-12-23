@@ -22,7 +22,20 @@ export default function Login() {
 
   useEffect(() => {
     // Check if already logged in
-    setLoading(false);
+    const checkLogin = async () => {
+      try {
+        const res = await fetch('/api/messages?t=' + new Date().getTime());
+        const data = await res.json();
+        if (data.success) {
+          router.replace('/dashboard');
+        } else {
+            setLoading(false);
+        }
+      } catch (e) {
+        setLoading(false);
+      }
+    };
+    checkLogin();
   }, []);
 
   const handleLogin = async () => {
