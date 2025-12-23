@@ -39,7 +39,7 @@ export default function Login() {
         // Cookie is set by server
         router.replace('/dashboard');
       } else {
-        setError('نام کاربری یا رمز عبور اشتباه است');
+        setError(data.error || 'نام کاربری یا رمز عبور اشتباه است');
       }
     } catch (err) {
       setError('خطا در برقراری ارتباط');

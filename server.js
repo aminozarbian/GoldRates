@@ -15,6 +15,46 @@ const cookieParser = require('cookie-parser');
 // Secret key for JWT signing (use environment variable in production)
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this';
 
+const SESSIONS_FILE = path.join(__dirname, 'data', 'sessions.json');
+
+// Helper functions for session management
+function getActiveSessions() {
+  try {
+    if (fs.existsSync(SESSIONS_FILE)) {
+      return JSON.parse(fs.readFileSync(SESSIONS_FILE, 'utf8'));
+    }
+  } catch (err) {
+    console.error('Error reading sessions file:', err);
+  }
+  return {};
+}
+
+function saveActiveSession(username, token) {
+  try {
+    const sessions = getActiveSessions();
+    sessions[username] = {
+      token,
+      loginTime: Date.now(),
+      lastSeen: Date.now()
+    };
+    fs.writeFileSync(SESSIONS_FILE, JSON.stringify(sessions, null, 2));
+  } catch (err) {
+    console.error('Error saving session:', err);
+  }
+}
+
+function removeActiveSession(username) {
+  try {
+    const sessions = getActiveSessions();
+    if (sessions[username]) {
+      delete sessions[username];
+      fs.writeFileSync(SESSIONS_FILE, JSON.stringify(sessions, null, 2));
+    }
+  } catch (err) {
+    console.error('Error removing session:', err);
+  }
+}
+
 // Setup Web Push
 const publicVapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || 'BM9QV3PkyEaDckMG_zqXF32kKMkcuUyiAkQP3IL093_C11BT-XgQAtNt0GjRYwVbRT_oW6Q0XiVvhzS5ZQ97jD4';
 const privateVapidKey = process.env.VAPID_PRIVATE_KEY || 'UmeQ6ZZHC0bEAfMQuvJGXVRJLqC0WiuJAA6uclSmVtE';
@@ -1028,9 +1068,30 @@ app.prepare().then(() => {
       const user = users.find(u => u.username === username && u.password === password);
 
       if (user) {
+        // Check for existing active session
+        const sessions = getActiveSessions();
+        const existingSession = sessions[user.username];
+        
+        // Define session timeout (e.g., 2 hours)
+        const SESSION_TIMEOUT = 2 * 60 * 60 * 1000;
+        
+        if (existingSession) {
+          const now = Date.now();
+          // If session is still valid (within timeout)
+          if (now - existingSession.lastSeen < SESSION_TIMEOUT) {
+             return res.status(409).json({ 
+               success: false, 
+               error: 'User is already logged in on another device. Please wait or contact support.' 
+             });
+          }
+        }
+
         // Generate token
         const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET, { expiresIn: '30d' });
         
+        // Save session
+        saveActiveSession(user.username, token);
+
         // Set cookie
         res.cookie('token', token, {
             httpOnly: true,
@@ -1051,6 +1112,17 @@ app.prepare().then(() => {
 
   // Logout Route
   server.post('/api/logout', (req, res) => {
+    // We need to know who is logging out. The cookie is still there.
+    const token = req.cookies.token;
+    if (token) {
+        try {
+            const decoded = jwt.verify(token, JWT_SECRET);
+            removeActiveSession(decoded.username);
+        } catch (err) {
+            // Token might be invalid, but we proceed to clear cookie
+        }
+    }
+    
     res.clearCookie('token');
     res.json({ success: true });
   });
@@ -1114,6 +1186,18 @@ function authenticateToken(req, res, next) {
 
   jwt.verify(token, JWT_SECRET, (err, user) => {
     if (err) return res.status(403).json({ error: 'Invalid token.' });
+    
+    // Update last seen activity
+    try {
+        const sessions = getActiveSessions();
+        if (sessions[user.username]) {
+            sessions[user.username].lastSeen = Date.now();
+            fs.writeFileSync(SESSIONS_FILE, JSON.stringify(sessions, null, 2));
+        }
+    } catch (sessionErr) {
+        console.error('Error updating session lastSeen:', sessionErr);
+    }
+
     req.user = user;
     next();
   });
