@@ -37,18 +37,18 @@ yarn-error.log*
 next-env.d.ts
 
 
- # pwa 
+#  pwa 
  public/sw.js 
  public/workbox-*.js 
  public/worker-*.js 
 
- # data
+#  data
  data/mt_prices.json
  data/sessions.json
  data/subscriptions.json
  data/users.json
 
- # logs
+# log
  logs/mt5_bridge.log
  
  
