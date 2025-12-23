@@ -9,6 +9,11 @@ const input = require('input');
 const fs = require('fs');
 const path = require('path');
 const webpush = require('web-push');
+const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
+
+// Secret key for JWT signing (use environment variable in production)
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this';
 
 // Setup Web Push
 const publicVapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || 'BM9QV3PkyEaDckMG_zqXF32kKMkcuUyiAkQP3IL093_C11BT-XgQAtNt0GjRYwVbRT_oW6Q0XiVvhzS5ZQ97jD4';
@@ -1006,9 +1011,52 @@ function getMtGoldPrice() {
 app.prepare().then(() => {
   const server = express();
   server.use(express.json());
+  server.use(cookieParser());
 
-  // API endpoint to get messages
-  server.get('/api/messages', (req, res) => {
+  // Login Route
+  server.post('/api/login', (req, res) => {
+    const { username, password } = req.body;
+    
+    try {
+      // Read users from file
+      const usersPath = path.join(__dirname, 'data', 'users.json');
+      if (!fs.existsSync(usersPath)) {
+        return res.status(500).json({ error: 'User database not found' });
+      }
+      
+      const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
+      const user = users.find(u => u.username === username && u.password === password);
+
+      if (user) {
+        // Generate token
+        const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET, { expiresIn: '30d' });
+        
+        // Set cookie
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
+            maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+            sameSite: 'strict'
+        });
+
+        res.json({ success: true, username: user.username });
+      } else {
+        res.status(401).json({ success: false, error: 'Invalid credentials' });
+      }
+    } catch (err) {
+      console.error('Login error:', err);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // Logout Route
+  server.post('/api/logout', (req, res) => {
+    res.clearCookie('token');
+    res.json({ success: true });
+  });
+
+  // API endpoint to get messages (Protected)
+  server.get('/api/messages', authenticateToken, (req, res) => {
     // Add strong no-cache headers
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.setHeader('Pragma', 'no-cache');
@@ -1017,6 +1065,7 @@ app.prepare().then(() => {
 
     const mtData = getMtGoldPrice();
     res.json({
+      username: req.user.username,
       buyMessage,
       sellMessage,
       buyHaratMessage,
@@ -1057,21 +1106,46 @@ app.prepare().then(() => {
     });
   });
 
-  // Subscribe Route for Push Notifications
-  server.post('/api/subscribe', (req, res) => {
+  // Middleware to authenticate JWT token
+function authenticateToken(req, res, next) {
+  const token = req.cookies.token; // Read from cookie instead of header
+
+  if (!token) return res.status(401).json({ error: 'Access denied. No token provided.' });
+
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (err) return res.status(403).json({ error: 'Invalid token.' });
+    req.user = user;
+    next();
+  });
+}
+
+// Subscribe Route for Push Notifications
+  server.post('/api/subscribe', authenticateToken, (req, res) => {
     const subscription = req.body;
     const subsPath = path.join(__dirname, 'data', 'subscriptions.json');
+    
+    // Add user info to subscription
+    const subscriptionWithUser = {
+      ...subscription,
+      userId: req.user.id,
+      username: req.user.username,
+      subscribedAt: new Date().toISOString()
+    };
+
     let subs = [];
     try {
       if (fs.existsSync(subsPath)) {
         subs = JSON.parse(fs.readFileSync(subsPath, 'utf8'));
       }
       // Check if exists
-      const exists = subs.find(s => s.endpoint === subscription.endpoint);
-      if (!exists) {
-        subs.push(subscription);
-        fs.writeFileSync(subsPath, JSON.stringify(subs, null, 2));
+      const existsIndex = subs.findIndex(s => s.endpoint === subscription.endpoint);
+      if (existsIndex === -1) {
+        subs.push(subscriptionWithUser);
+      } else {
+        // Update existing subscription with user info if needed
+        subs[existsIndex] = subscriptionWithUser;
       }
+      fs.writeFileSync(subsPath, JSON.stringify(subs, null, 2));
       res.status(201).json({ success: true });
     } catch (err) {
       console.error('Error saving subscription:', err);
@@ -1080,7 +1154,12 @@ app.prepare().then(() => {
   });
 
   // Send Notification Route
-  server.post('/api/send-notification', (req, res) => {
+  server.post('/api/send-notification', authenticateToken, (req, res) => {
+    // Only allow admin to send notifications
+    if (req.user.username !== 'admin') {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+
     const { title, body } = req.body;
     const payload = JSON.stringify({ title, body });
     const subsPath = path.join(__dirname, 'data', 'subscriptions.json');
