@@ -43,9 +43,12 @@ next-env.d.ts
  public/worker-*.js 
 
  # data
- /data/
+ data/mt_prices.json
+ data/sessions.json
+ data/subscriptions.json
+ data/users.json
 
  # logs
- /logs/
+ logs/mt5_bridge.log
  
  
