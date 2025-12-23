@@ -39,9 +39,9 @@ export default function Login() {
         // Cookie is set by server
         router.replace('/dashboard');
       } else {
-        if (data.error === 'Invalid username or password') {
+        if (data.error == 'Invalid credentials') {
           setError('نام کاربری یا رمز عبور اشتباه است');
-        } else if (data.error === 'User is already logged in on another device. Please wait or contact support.') {
+        } else if (data.error == 'User is already logged in on another device. Please wait or contact support.') {
           setError('کاربر در حال حاضر در سامانه وارد شده است. لطفا منتظر بمانید یا با پشتیبانی تماس بگیرید.');
         } else{
           setError(data.error);
