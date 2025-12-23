@@ -46,6 +46,6 @@ next-env.d.ts
  data/
 
  # logs
- logs/
+ /logs/
  
  
