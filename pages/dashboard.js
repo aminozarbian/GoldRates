@@ -271,21 +271,21 @@ export default function Dashboard() {
   };
 
   const sendTestNotification = async () => {
-    try {
-        await fetch('/api/send-notification', {
-        method: 'POST',
-        body: JSON.stringify({
-            title: 'Test Notification',
-            body: 'This is a test notification from Gold Rates!'
-        }),
-        headers: {
-            'content-type': 'application/json'
-        }
-        });
-        alert('Notification sent!');
-    } catch (err) {
-        alert('Error sending notification');
-    }
+    // try {
+    //     await fetch('/api/send-notification', {
+    //     method: 'POST',
+    //     body: JSON.stringify({
+    //         title: 'Test Notification',
+    //         body: 'This is a test notification from Gold Rates!'
+    //     }),
+    //     headers: {
+    //         'content-type': 'application/json'
+    //     }
+    //     });
+    //     alert('Notification sent!');
+    // } catch (err) {
+    //     alert('Error sending notification');
+    // }
   };
 
   const sendCustomNotification = async () => {
@@ -495,9 +495,6 @@ export default function Dashboard() {
                     
                     <Button variant="outlined" color="primary" onClick={subscribeToPush} fullWidth>
                         Subscribe to Notifications
-                    </Button>
-                    <Button variant="outlined" color="secondary" onClick={sendTestNotification} fullWidth>
-                        Test Notification
                     </Button>
                     <Button color="error" size="small" onClick={async () => {
                         await fetch('/api/logout', { method: 'POST' });
