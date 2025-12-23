@@ -17,7 +17,7 @@ import {
   TextField,
 } from '@mui/material';
 import {
-  Notifications as NotificationsIcon,
+  Logout as LogoutIcon,
   CheckCircle as CheckCircleIcon,
   Diamond as DiamondIcon,
   AccessTime as AccessTimeIcon
@@ -357,10 +357,11 @@ export default function Dashboard() {
             </Typography>
             <Image src={goldRating} alt="Gold Rating" width={32} height={32} />
           </Box>
-          <IconButton sx={{ color: 'white' }}>
-            <Badge color="error" variant="dot">
-              <NotificationsIcon />
-            </Badge>
+          <IconButton sx={{ color: 'white' }} onClick={async () => {
+                        await fetch('/api/logout', { method: 'POST' });
+                        router.replace('/');
+                    }}>
+              <LogoutIcon />
           </IconButton>
         </Toolbar>
       </AppBar>
@@ -494,14 +495,9 @@ export default function Dashboard() {
                     )}
                     
                     <Button variant="outlined" color="primary" onClick={subscribeToPush} fullWidth>
-                        Subscribe to Notifications
+                        برای دریافت اعلانات کلیک کنید
                     </Button>
-                    <Button color="error" size="small" onClick={async () => {
-                        await fetch('/api/logout', { method: 'POST' });
-                        router.replace('/');
-                    }}>
-                        Logout
-                    </Button>
+                    
                 </Box>
         </Box>
       </Container>
